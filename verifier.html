@@ -25,19 +25,19 @@
         <!-- NEXT-ROUND MULTIPLIER CONTROL PANEL -->
         <div class="card">
             <h2>Next-Round Multiplier Control</h2>
-            <p>Directly set the exact crash multiplier for the upcoming flight round. This syncs instantly with your active game session.</p>
+            <p>Set the exact crash multiplier ahead of time. This locks in and forces the game screen to match during the upcoming round.</p>
             <div class="input-group">
                 <label>Target Multiplier (e.g. 2.50, 5.00, 10.00)</label>
                 <input type="number" id="targetMultiplierInput" step="0.01" placeholder="2.50" value="2.50">
             </div>
             <button class="btn" onclick="setNextMultiplier()">Set Next Multiplier</button>
-            <div id="controlStatus" style="font-size: 12px; color: #00e676;"></div>
+            <div id="controlStatus" style="font-size: 12px; color: #00e676; font-weight: bold;"></div>
         </div>
 
         <!-- PROVABLY FAIR VERIFIER -->
         <div class="card">
             <h2>Provably Fair SHA-256 Verifier</h2>
-            <p>Verify past rounds using the game hash and salt to guarantee absolute fairness.</p>
+            <p>Verify past rounds using the game hash to guarantee absolute fairness.</p>
             <div class="input-group">
                 <label>Round Hash / Secret Seed</label>
                 <input type="text" id="verifyHashInput" placeholder="Paste hash string here...">
@@ -55,7 +55,7 @@
             return;
         }
         localStorage.setItem('ushindi_next_multiplier', val);
-        document.getElementById('controlStatus').innerText = `Successfully locked next round multiplier to ${val.toFixed(2)}x!`;
+        document.getElementById('controlStatus').innerText = `Successfully locked next round multiplier to ${val.toFixed(2)}x ahead of time!`;
         setTimeout(() => { document.getElementById('controlStatus').innerText = ''; }, 4000);
     }
 
@@ -66,7 +66,7 @@
             return;
         }
         const msgBuffer = new TextEncoder().encode(hash);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashBuffer = analyticalCrypto = await crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         let computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
