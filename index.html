@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ushindiaviator - Multiplier Crash Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#07090e',
+                            900: '#0d1117',
+                            800: '#161b22',
+                            700: '#21262d',
+                            600: '#30363d'
+                        },
+                        neon: {
+                            cyan: '#00f2fe',
+                            blue: '#4facfe',
+                            red: '#ff2a5f',
+                            green: '#00e676',
+                            gold: '#ffd700'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #07090e;
+            color: #ffffff;
+            user-select: none;
+        }
+        .font-mono-num { font-family: 'JetBrains Mono', monospace; }
+        .glow-cyan { text-shadow: 0 0 15px rgba(0, 242, 254, 0.6); }
+        .glow-red { text-shadow: 0 0 20px rgba(255, 42, 95, 0.8); }
+        .box-glow { box-shadow: 0 0 25px rgba(0, 242, 254, 0.1); }
+        ::-webkit-scrollbar { height: 4px; width: 4px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #21262d; border-radius: 4px; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col justify-between bg-dark-950 text-gray-100">
+
+    <!-- AUTHENTICATION MODAL -->
+    <div id="authModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-dark-700 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl box-glow">
+            <div class="flex flex-col items-center mb-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/40 mb-3">
+                    <i class="fa-solid fa-plane-departure text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                    ushindiaviator
+                </h1>
+                <p class="text-xs text-gray-400 mt-1">Enter your Kenyan mobile details to start playing</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1 bg-dark-950 p-1 rounded-xl mb-6 border border-dark-700">
+                <button id="tabLogin" class="py-2.5 text-xs font-bold rounded-lg transition bg-dark-800 text-cyan-400">LOGIN</button>
+                <button id="tabRegister" class="py-2.5 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">REGISTER</button>
+            </div>
+
+            <div id="authError" class="hidden mb-4 p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-400 text-xs font-medium text-center"></div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" class="flex flex-col gap-4">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Phone Number (07XXXXXXXX)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-phone absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="tel" id="loginPhone" maxlength="10" placeholder="0712345678"
+                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Password PIN (4 Digits)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="password" id="loginPin" maxlength="4" placeholder="••••"
+                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500 tracking-widest">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 mt-2 rounded-xl font-black text-sm transition bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25">
+                    ENTER GAME
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" class="hidden flex flex-col gap-4">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Phone Number (07XXXXXXXX)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-phone absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="tel" id="regPhone" maxlength="10" placeholder="0712345678"
+                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">New Password PIN (4 Digits)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="password" id="regPin" maxlength="4" placeholder="••••"
+                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500 tracking-widest">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Confirm Password PIN (4 Digits)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-check-double absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                        <input type="password" id="regPinConfirm" maxlength="4" placeholder="••••"
+                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500 tracking-widest">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 mt-2 rounded-xl font-black text-sm transition bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-dark-950 shadow-lg shadow-emerald-500/25">
+                    CREATE ACCOUNT
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EQUITY BANK DEPOSIT MODAL -->
+    <div id="depositModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-dark-900 border border-dark-700 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+            <button id="closeDepositBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg font-black border border-emerald-500/30">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                    <h2 class="font-black text-lg text-white">Equity Bank Deposit</h2>
+                    <p class="text-xs text-gray-400">Top up your ushindiaviator gaming account</p>
+                </div>
+            </div>
+
+            <div class="bg-dark-950 border border-emerald-500/30 rounded-2xl p-4 mb-4 space-y-2">
+                <div class="flex justify-between items-center text-xs border-b border-dark-800 pb-2">
+                    <span class="text-gray-400">Paybill Number:</span>
+                    <span class="font-black text-emerald-400 font-mono-num text-sm">247247</span>
+                </div>
+                <div class="flex justify-between items-center text-xs border-b border-dark-800 pb-2">
+                    <span class="text-gray-400">Account Name:</span>
+                    <span class="font-bold text-gray-200">USHINDI AVIATOR</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-gray-400">Account Reference:</span>
+                    <span id="equityAccountRef" class="font-mono-num text-cyan-400 font-bold">USHINDI-USER</span>
+                </div>
+            </div>
+
+            <form id="depositForm" class="space-y-4">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Deposit Amount (KES)</label>
+                    <div class="relative flex items-center">
+                        <button type="button" id="depStepMinus" class="bg-dark-800 hover:bg-dark-700 px-3.5 py-2.5 rounded-l-xl border-y border-l border-dark-700 text-gray-300 font-bold text-base transition">-</button>
+                        <input type="number" id="depositAmount" min="1" max="500000" step="1" placeholder="Enter amount"
+                            class="w-full bg-dark-950 border border-dark-700 py-2.5 text-center text-white font-bold text-base focus:outline-none focus:border-emerald-500">
+                        <button type="button" id="depStepPlus" class="bg-dark-800 hover:bg-dark-700 px-3.5 py-2.5 rounded-r-xl border-y border-r border-dark-700 text-gray-300 font-bold text-base transition">+</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" class="dep-preset bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-2 rounded-xl font-bold text-emerald-400 transition" data-val="50">KES 50</button>
+                    <button type="button" class="dep-preset bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-2 rounded-xl font-bold text-emerald-400 transition" data-val="100">KES 100</button>
+                    <button type="button" class="dep-preset bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-2 rounded-xl font-bold text-emerald-400 transition" data-val="1000">KES 1,000</button>
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl font-black text-sm transition bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-dark-950 shadow-lg shadow-emerald-500/25">
+                    CONFIRM DEPOSIT
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="h-14 bg-dark-900 border-b border-dark-700 px-4 md:px-6 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-plane-departure text-lg"></i>
+            </div>
+            <span class="font-black text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                USHINDI AVIATOR
+            </span>
+        </div>
+
+        <div class="flex items-center space-x-2 md:space-x-3">
+            <div id="userBadge" class="hidden md:flex items-center space-x-2 bg-dark-800 border border-dark-700 rounded-xl px-3 py-1.5 text-xs text-gray-300 font-semibold">
+                <i class="fa-solid fa-user-astronaut text-cyan-400"></i>
+                <span id="activeUserPhone">0700000000</span>
+            </div>
+
+            <div class="bg-dark-900 border border-dark-700 rounded-xl px-2.5 md:px-3 py-1 flex items-center space-x-2">
+                <span class="hidden sm:inline text-[10px] text-gray-400 font-semibold uppercase">Balance</span>
+                <span id="userBalance" class="text-neon-cyan font-black text-sm md:text-lg">KES 0.00</span>
+                <button id="openDepositBtn" title="Deposit Funds" class="bg-emerald-500 hover:bg-emerald-400 text-dark-950 font-black text-xs px-2.5 py-1 rounded-lg ml-1 transition flex items-center space-x-1 shadow-md shadow-emerald-500/20">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>DEPOSIT</span>
+                </button>
+            </div>
+
+            <a href="verifier.html" target="_blank" title="Open Standalone Provably Fair Verifier"
+               class="bg-dark-800 hover:bg-dark-700 border border-dark-700 text-emerald-400 px-2.5 h-9 rounded-lg flex items-center gap-1.5 text-xs font-bold transition">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="hidden lg:inline">Verifier</span>
+            </a>
+
+            <button id="soundToggleBtn" title="Toggle Audio" class="bg-dark-800 hover:bg-dark-700 border border-dark-700 text-gray-300 w-9 h-9 rounded-lg flex items-center justify-center transition">
+                <i id="soundIcon" class="fa-solid fa-volume-high text-cyan-400"></i>
+            </button>
+
+            <button id="logoutBtn" title="Log Out" class="bg-dark-800 hover:bg-red-950 border border-dark-700 text-gray-400 hover:text-red-400 w-9 h-9 rounded-lg flex items-center justify-center transition">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME LAYOUT -->
+    <main class="flex-1 flex flex-col md:flex-row p-3 md:p-4 gap-3 md:gap-4 overflow-hidden max-w-[1600px] w-full mx-auto">
+        
+        <!-- Left Betting Controls -->
+        <section class="w-full md:w-96 flex flex-col gap-3 shrink-0 order-2 md:order-1 overflow-y-auto pr-1">
+            
+            <!-- BET SLOT 1 -->
+            <div id="slot1" class="bg-dark-900 border border-dark-700 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all duration-300">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-400 tracking-wider uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Bet Slot 1
+                    </span>
+                    <span id="slot1Status" class="text-xs font-semibold px-2 py-0.5 rounded bg-dark-800 text-gray-400 border border-dark-700">WAITING</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Amount (KES)</label>
+                        <div class="relative flex items-center">
+                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-l-xl border-y border-l border-dark-700 text-gray-300 font-bold text-xs" data-slot="1" data-dir="-1">-</button>
+                            <input type="number" id="betAmount1" value="10.00" min="1" max="100000" step="1"
+                                class="w-full bg-dark-950 border border-dark-700 py-2 text-center text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
+                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-r-xl border-y border-r border-dark-700 text-gray-300 font-bold text-xs" data-slot="1" data-dir="1">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Auto Cash Out</label>
+                        <input type="number" id="autoCash1" value="2.00" min="1.01" step="0.10" placeholder="Off"
+                            class="w-full bg-dark-950 border border-dark-700 rounded-xl px-3 py-2 text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="10">10</button>
+                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="50">50</button>
+                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="100">100</button>
+                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="500">500</button>
+                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="1000">1K</button>
+                </div>
+                <button id="betBtn1" class="w-full py-3 rounded-xl font-black text-lg transition duration-200 transform active:scale-95 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-dark-950 shadow-lg shadow-emerald-500/20">
+                    BET
+                </button>
+            </div>
+
+            <!-- BET SLOT 2 -->
+            <div id="slot2" class="bg-dark-900 border border-dark-700 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all duration-300">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-400 tracking-wider uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> Bet Slot 2
+                    </span>
+                    <span id="slot2Status" class="text-xs font-semibold px-2 py-0.5 rounded bg-dark-800 text-gray-400 border border-dark-700">WAITING</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Amount (KES)</label>
+                        <div class="relative flex items-center">
+                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-l-xl border-y border-l border-dark-700 text-gray-300 font-bold text-xs" data-slot="2" data-dir="-1">-</button>
+                            <input type="number" id="betAmount2" value="20.00" min="1" max="100000" step="1"
+                                class="w-full bg-dark-950 border border-dark-700 py-2 text-center text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
+                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-r-xl border-y border-r border-dark-700 text-gray-300 font-bold text-xs" data-slot="2" data-dir="1">+</button>
+                        </div>
+                    </div>
+         
