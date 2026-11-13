@@ -68,7 +68,7 @@
             </div>
 
             <div class="fairness-box" id="fairnessBox">
-                Provably Fair SHA-256 Hash (Current Round): <span id="currentHash" style="color:#00e676">Waiting...</span>
+                Provably Fair SHA-256 Hash (Upcoming Round): <span id="currentHash" style="color:#00e676">Waiting...</span>
             </div>
         </div>
 
@@ -269,34 +269,44 @@
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
+    async function prepareNextRound() {
+        // Generate or override target multiplier BEFORE the countdown starts so it's known in advance
+        let overrideMultiplier = localStorage.getItem('ushindi_next_multiplier');
+        if (overrideMultiplier !== null && overrideMultiplier !== undefined && overrideMultiplier !== '') {
+            targetCrashMultiplier = parseFloat(overrideMultiplier);
+            localStorage.removeItem('ushindi_next_multiplier');
+        } else {
+            let r = Math.random();
+            targetCrashMultiplier = parseFloat((1.01 + (0.99 / (1 - r * 0.95) - 0.99)).toFixed(2));
+            if (targetCrashMultiplier < 1.00) targetCrashMultiplier = 1.00;
+            if (targetCrashMultiplier > 100) targetCrashMultiplier = 100.00;
+        }
+
+        let hashStr = await sha256(targetCrashMultiplier.toString() + Date.now());
+        document.getElementById('currentHash').innerText = hashStr;
+        
+        // Push upcoming target and hash to localStorage immediately so verifier sees it ahead of time
+        localStorage.setItem('ushindi_current_hash', hashStr);
+        localStorage.setItem('ushindi_active_target', targetCrashMultiplier.toFixed(2));
+    }
+
     async function startGameStateLoop() {
+        // Prepare first round target immediately on load
+        await prepareNextRound();
+
         while (true) {
             gameState = 'COUNTDOWN';
             countdownTimer = 5;
-            
-            let overrideMultiplier = localStorage.getItem('ushindi_next_multiplier');
-            if (overrideMultiplier !== null && overrideMultiplier !== undefined && overrideMultiplier !== '') {
-                targetCrashMultiplier = parseFloat(overrideMultiplier);
-                localStorage.removeItem('ushindi_next_multiplier');
-            } else {
-                let r = Math.random();
-                targetCrashMultiplier = parseFloat((1.01 + (0.99 / (1 - r * 0.95) - 0.99)).toFixed(2));
-                if (targetCrashMultiplier < 1.00) targetCrashMultiplier = 1.00;
-                if (targetCrashMultiplier > 100) targetCrashMultiplier = 100.00;
-            }
-
-            let hashStr = await sha256(targetCrashMultiplier.toString() + Date.now());
-            document.getElementById('currentHash').innerText = hashStr;
-            
-            // Sync target crash multiplier and current hash to localStorage for the verifier panel display
-            localStorage.setItem('ushindi_current_hash', hashStr);
-            localStorage.setItem('ushindi_active_target', targetCrashMultiplier.toFixed(2));
 
             while (countdownTimer > 0) {
+                // Check if user set a manual override during countdown
                 let lateOverride = localStorage.getItem('ushindi_next_multiplier');
                 if (lateOverride !== null && lateOverride !== undefined && lateOverride !== '') {
                     targetCrashMultiplier = parseFloat(lateOverride);
                     localStorage.removeItem('ushindi_next_multiplier');
+                    let newHash = await sha256(targetCrashMultiplier.toString() + Date.now());
+                    document.getElementById('currentHash').innerText = newHash;
+                    localStorage.setItem('ushindi_current_hash', newHash);
                     localStorage.setItem('ushindi_active_target', targetCrashMultiplier.toFixed(2));
                 }
 
@@ -348,6 +358,9 @@
             history.unshift(currentMultiplier.toFixed(2) + 'x');
             if (history.length > 15) history.pop();
             updateHistoryBar();
+
+            // Prepare the NEXT round's target multiplier and hash while waiting between rounds
+            await prepareNextRound();
 
             await new Promise(r => setTimeout(r, 3000));
         }
