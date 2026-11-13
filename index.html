@@ -139,7 +139,7 @@
     let activeUser = localStorage.getItem('ushindi_active_user') || null;
 
     let balance = 0;
-    let gameState = 'IDLE'; // IDLE, COUNTDOWN, FLYING, CRASHED
+    let gameState = 'IDLE'; 
     let currentMultiplier = 1.00;
     let targetCrashMultiplier = 2.00;
     let countdownTimer = 5;
@@ -162,7 +162,6 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // AUTH SYSTEM
     function checkAuth() {
         if (!activeUser || !users[activeUser]) {
             document.getElementById('authModal').style.display = 'flex';
@@ -182,7 +181,7 @@
             return;
         }
         if (!users[phone]) {
-            users[phone] = { pin: pin, balance: 1000.00 }; // Welcome bonus
+            users[phone] = { pin: pin, balance: 1000.00 };
         } else if (users[phone].pin !== pin) {
             alert('Incorrect PIN!');
             return;
@@ -211,7 +210,6 @@
         }
     }
 
-    // DEPOSIT
     function openDepositModal() { document.getElementById('depositModal').style.display = 'flex'; }
     function closeDepositModal() { document.getElementById('depositModal').style.display = 'none'; }
     function confirmDeposit() {
@@ -224,7 +222,6 @@
         alert(`Successfully deposited KES ${amt.toFixed(2)} via Equity Paybill 247247!`);
     }
 
-    // BETTING LOGIC
     function setBet(slot, val) {
         document.getElementById(`betInput${slot}`).value = val;
     }
@@ -266,7 +263,6 @@
         btn.className = 'action-btn btn-bet';
     }
 
-    // GAME ENGINE & SYNED MULTIPLIER
     async function sha256(message) {
         const msgBuffer = new TextEncoder().encode(message);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -276,17 +272,15 @@
 
     async function startGameStateLoop() {
         while (true) {
-            // COUNTDOWN PHASE
             gameState = 'COUNTDOWN';
             countdownTimer = 5;
             
-            // Check synced developer override
+            // Instantly check and apply verifier control override
             let overrideMultiplier = localStorage.getItem('ushindi_next_multiplier');
-            if (overrideMultiplier) {
+            if (overrideMultiplier !== null && overrideMultiplier !== undefined && overrideMultiplier !== '') {
                 targetCrashMultiplier = parseFloat(overrideMultiplier);
-                localStorage.removeItem('ushindi_next_multiplier');
+                localStorage.removeItem('ushindi_next_multiplier'); // Clear after capturing so it only forces once per set
             } else {
-                // Random Provably Fair crash algorithm (weighted towards 1.00x - 2.00x)
                 let r = Math.random();
                 targetCrashMultiplier = parseFloat((1.01 + (0.99 / (1 - r * 0.95) - 0.99)).toFixed(2));
                 if (targetCrashMultiplier < 1.00) targetCrashMultiplier = 1.00;
@@ -296,20 +290,20 @@
             let hashStr = await sha256(targetCrashMultiplier.toString() + Date.now());
             document.getElementById('currentHash').innerText = hashStr;
 
-            for (let i = 1; i <= 2; i++) {
-                if (bets[i].active && gameState === 'COUNTDOWN') {
-                    // Bet stays locked for next round
-                }
-            }
-
             while (countdownTimer > 0) {
+                // Continuously poll during countdown in case user submits a late override from verifier panel
+                let lateOverride = localStorage.getItem('ushindi_next_multiplier');
+                if (lateOverride !== null && lateOverride !== undefined && lateOverride !== '') {
+                    targetCrashMultiplier = parseFloat(lateOverride);
+                    localStorage.removeItem('ushindi_next_multiplier');
+                }
+
                 document.getElementById('multiplierDisplay').innerText = `NEXT ROUND IN ${countdownTimer}s`;
                 document.getElementById('multiplierDisplay').style.color = '#00e676';
                 await new Promise(r => setTimeout(r, 1000));
                 countdownTimer--;
             }
 
-            // FLYING PHASE
             gameState = 'FLYING';
             flightStartTime = Date.now();
             currentMultiplier = 1.00;
@@ -338,7 +332,6 @@
                 await new Promise(r => setTimeout(r, 40));
             }
 
-            // CRASHED PHASE
             document.getElementById('multiplierDisplay').innerText = `FLEW AWAY @ ${currentMultiplier.toFixed(2)}x`;
             document.getElementById('multiplierDisplay').style.color = '#ff3b30';
 
@@ -389,11 +382,8 @@
         });
     }
 
-    // 60 FPS CANVAS RENDERER
     function renderCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw background grid lines
         ctx.strokeStyle = '#1b2436';
         ctx.lineWidth = 1;
         for (let x = 0; x < canvas.width; x += 40) {
@@ -404,7 +394,6 @@
         }
 
         if (gameState === 'FLYING' || gameState === 'CRASHED') {
-            // Draw flight curve trajectory
             ctx.strokeStyle = '#ff3b30';
             ctx.lineWidth = 4;
             ctx.beginPath();
@@ -414,7 +403,6 @@
             ctx.quadraticCurveTo(canvas.width * 0.4, canvas.height * 0.8, progressX, progressY);
             ctx.stroke();
 
-            // Draw Airplane Icon
             ctx.fillStyle = '#ffffff';
             ctx.font = '24px sans-serif';
             ctx.fillText('✈️', progressX - 15, progressY + 10);
