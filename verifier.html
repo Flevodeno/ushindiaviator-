@@ -9,6 +9,9 @@
         body { background: #0b0e14; color: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .container { max-width: 600px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
         .card { background: #151922; border: 1px solid #222d42; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .live-banner { background: #1f2633; border: 1px solid #00e676; border-radius: 10px; padding: 15px; text-align: center; }
+        .live-banner h3 { font-size: 14px; color: #8a99ad; text-transform: uppercase; margin-bottom: 5px; }
+        .live-banner span { font-size: 32px; font-weight: 900; color: #00e676; }
         h2 { color: #00e676; font-size: 22px; }
         p { font-size: 13px; color: #8a99ad; line-height: 1.5; }
         .input-group { display: flex; flex-direction: column; gap: 6px; }
@@ -22,6 +25,12 @@
 <body>
 
     <div class="container">
+        <!-- UPPER CRASHING POINT LIVE DISPLAY -->
+        <div class="live-banner">
+            <h3>Active Round Crash Point Preview</h3>
+            <span id="liveCrashDisplay">--</span>
+        </div>
+
         <!-- NEXT-ROUND MULTIPLIER CONTROL PANEL -->
         <div class="card">
             <h2>Next-Round Multiplier Control</h2>
@@ -37,10 +46,10 @@
         <!-- PROVABLY FAIR VERIFIER -->
         <div class="card">
             <h2>Provably Fair SHA-256 Verifier</h2>
-            <p>Verify past rounds using the game hash to guarantee absolute fairness.</p>
+            <p>Verify rounds automatically using the active game hash.</p>
             <div class="input-group">
                 <label>Round Hash / Secret Seed</label>
-                <input type="text" id="verifyHashInput" placeholder="Paste hash string here...">
+                <input type="text" id="verifyHashInput" placeholder="Auto-filled from active game round...">
             </div>
             <button class="btn" style="background:#ff3b30; color:#fff;" onclick="verifyRound()">Verify Hash</button>
             <div class="result-box" id="verifyResult">Verification results will appear here...</div>
@@ -48,6 +57,22 @@
     </div>
 
 <script>
+    // Auto-fill hash and active crash point on load and poll for updates
+    function syncVerifierData() {
+        let activeHash = localStorage.getItem('ushindi_current_hash');
+        if (activeHash && !document.getElementById('verifyHashInput').value) {
+            document.getElementById('verifyHashInput').value = activeHash;
+        }
+
+        let activeTarget = localStorage.getItem('ushindi_active_target');
+        if (activeTarget) {
+            document.getElementById('liveCrashDisplay').innerText = activeTarget + 'x';
+        }
+    }
+
+    setInterval(syncVerifierData, 1000);
+    window.addEventListener('DOMContentLoaded', syncVerifierData);
+
     function setNextMultiplier() {
         let val = parseFloat(document.getElementById('targetMultiplierInput').value);
         if (isNaN(val) || val < 1.00) {
@@ -62,11 +87,11 @@
     async function verifyRound() {
         let hash = document.getElementById('verifyHashInput').value.trim();
         if (!hash) {
-            alert('Please enter a hash to verify.');
+            alert('Please enter or wait for a hash to auto-fill.');
             return;
         }
         const msgBuffer = new TextEncoder().encode(hash);
-        const hashBuffer = analyticalCrypto = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         let computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
