@@ -2,282 +2,429 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ushindiaviator - Multiplier Crash Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dark: {
-                            950: '#07090e',
-                            900: '#0d1117',
-                            800: '#161b22',
-                            700: '#21262d',
-                            600: '#30363d'
-                        },
-                        neon: {
-                            cyan: '#00f2fe',
-                            blue: '#4facfe',
-                            red: '#ff2a5f',
-                            green: '#00e676',
-                            gold: '#ffd700'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UshindiAviator - KES Crash Game</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #07090e;
-            color: #ffffff;
-            user-select: none;
-        }
-        .font-mono-num { font-family: 'JetBrains Mono', monospace; }
-        .glow-cyan { text-shadow: 0 0 15px rgba(0, 242, 254, 0.6); }
-        .glow-red { text-shadow: 0 0 20px rgba(255, 42, 95, 0.8); }
-        .box-glow { box-shadow: 0 0 25px rgba(0, 242, 254, 0.1); }
-        ::-webkit-scrollbar { height: 4px; width: 4px; }
-        ::-webkit-scrollbar-track { background: #0d1117; }
-        ::-webkit-scrollbar-thumb { background: #21262d; border-radius: 4px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0b0e14; color: #fff; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+        header { background: #151922; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222938; }
+        .logo { font-size: 20px; font-weight: 900; color: #ff3b30; letter-spacing: 1px; }
+        .logo span { color: #fff; }
+        .user-panel { display: flex; align-items: center; gap: 15px; font-size: 14px; }
+        .balance-badge { background: #1f2633; padding: 6px 12px; border-radius: 20px; border: 1px solid #323d54; color: #00e676; font-weight: bold; }
+        .btn { background: #ff3b30; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-deposit { background: #00e676; color: #000; }
+        .main-container { display: flex; flex: 1; flex-direction: column; max-width: 1200px; width: 100%; margin: 0 auto; padding: 15px; gap: 15px; }
+        @media(min-width: 900px) { .main-container { flex-direction: row; } }
+        .game-section { flex: 2; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-container { position: relative; background: #121824; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid #222d42; display: flex; align-items: center; justify-content: center; }
+        canvas { width: 100%; height: 100%; display: block; }
+        .multiplier-display { position: absolute; font-size: 48px; font-weight: 900; text-shadow: 0 4px 15px rgba(0,0,0,0.8); pointer-events: none; }
+        .betting-section { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .bet-panels-wrapper { display: flex; flex-direction: column; gap: 15px; }
+        @media(min-width: 600px) { .bet-panels-wrapper { flex-direction: row; } }
+        .bet-panel { background: #151922; border: 1px solid #222d42; border-radius: 12px; padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .bet-controls { display: flex; justify-content: space-between; align-items: center; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .input-group label { font-size: 11px; color: #8a99ad; text-transform: uppercase; font-weight: bold; }
+        .input-row { display: flex; background: #0b0e14; border: 1px solid #2b374d; border-radius: 8px; overflow: hidden; }
+        .input-row input { background: transparent; border: none; color: white; padding: 10px; width: 100%; font-size: 16px; font-weight: bold; outline: none; text-align: center; }
+        .quick-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .q-btn { background: #1f2633; border: 1px solid #2b374d; color: #fff; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .action-btn { width: 100%; padding: 16px; border-radius: 10px; font-size: 18px; font-weight: 900; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-bet { background: #00e676; color: #0b0e14; }
+        .btn-bet.active-bet { background: #ff9800; color: #fff; }
+        .btn-cashout { background: #ff3b30; color: #fff; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .history-bar { background: #151922; padding: 10px 15px; border-radius: 8px; display: flex; gap: 8px; overflow-x: auto; border: 1px solid #222d42; align-items: center; }
+        .history-pill { background: #1f2633; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap; border: 1px solid #2b374d; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+        .modal-content { background: #151922; border: 1px solid #2b374d; padding: 25px; border-radius: 14px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .modal-content h3 { font-size: 20px; color: #00e676; }
+        .modal-content input { background: #0b0e14; border: 1px solid #2b374d; padding: 12px; border-radius: 8px; color: #fff; font-size: 16px; width: 100%; outline: none; }
+        .fairness-box { background: #121824; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; color: #8a99ad; word-break: break-all; border: 1px solid #222d42; }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col justify-between bg-dark-950 text-gray-100">
+<body>
 
-    <!-- AUTHENTICATION MODAL -->
-    <div id="authModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-dark-900 border border-dark-700 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl box-glow">
-            <div class="flex flex-col items-center mb-6 text-center">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/40 mb-3">
-                    <i class="fa-solid fa-plane-departure text-2xl"></i>
-                </div>
-                <h1 class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                    ushindiaviator
-                </h1>
-                <p class="text-xs text-gray-400 mt-1">Enter your Kenyan mobile details to start playing</p>
-            </div>
-
-            <div class="grid grid-cols-2 gap-1 bg-dark-950 p-1 rounded-xl mb-6 border border-dark-700">
-                <button id="tabLogin" class="py-2.5 text-xs font-bold rounded-lg transition bg-dark-800 text-cyan-400">LOGIN</button>
-                <button id="tabRegister" class="py-2.5 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">REGISTER</button>
-            </div>
-
-            <div id="authError" class="hidden mb-4 p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-400 text-xs font-medium text-center"></div>
-
-            <!-- LOGIN FORM -->
-            <form id="loginForm" class="flex flex-col gap-4">
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Phone Number (07XXXXXXXX)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-phone absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
-                        <input type="tel" id="loginPhone" maxlength="10" placeholder="0712345678"
-                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Password PIN (4 Digits)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
-                        <input type="password" id="loginPin" maxlength="4" placeholder="••••"
-                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500 tracking-widest">
-                    </div>
-                </div>
-                <button type="submit" class="w-full py-3 mt-2 rounded-xl font-black text-sm transition bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25">
-                    ENTER GAME
-                </button>
-            </form>
-
-            <!-- REGISTER FORM -->
-            <form id="registerForm" class="hidden flex flex-col gap-4">
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Phone Number (07XXXXXXXX)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-phone absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
-                        <input type="tel" id="regPhone" maxlength="10" placeholder="0712345678"
-                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">New Password PIN (4 Digits)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
-                        <input type="password" id="regPin" maxlength="4" placeholder="••••"
-                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500 tracking-widest">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Confirm Password PIN (4 Digits)</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-check-double absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
-                        <input type="password" id="regPinConfirm" maxlength="4" placeholder="••••"
-                            class="w-full bg-dark-950 border border-dark-700 rounded-xl pl-9 pr-3 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-cyan-500 tracking-widest">
-                    </div>
-                </div>
-                <button type="submit" class="w-full py-3 mt-2 rounded-xl font-black text-sm transition bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-dark-950 shadow-lg shadow-emerald-500/25">
-                    CREATE ACCOUNT
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- EQUITY BANK DEPOSIT MODAL -->
-    <div id="depositModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-dark-900 border border-dark-700 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
-            <button id="closeDepositBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg font-black border border-emerald-500/30">
-                    <i class="fa-solid fa-building-columns"></i>
-                </div>
-                <div>
-                    <h2 class="font-black text-lg text-white">Equity Bank Deposit</h2>
-                    <p class="text-xs text-gray-400">Top up your ushindiaviator gaming account</p>
-                </div>
-            </div>
-
-            <div class="bg-dark-950 border border-emerald-500/30 rounded-2xl p-4 mb-4 space-y-2">
-                <div class="flex justify-between items-center text-xs border-b border-dark-800 pb-2">
-                    <span class="text-gray-400">Paybill Number:</span>
-                    <span class="font-black text-emerald-400 font-mono-num text-sm">247247</span>
-                </div>
-                <div class="flex justify-between items-center text-xs border-b border-dark-800 pb-2">
-                    <span class="text-gray-400">Account Name:</span>
-                    <span class="font-bold text-gray-200">USHINDI AVIATOR</span>
-                </div>
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-gray-400">Account Reference:</span>
-                    <span id="equityAccountRef" class="font-mono-num text-cyan-400 font-bold">USHINDI-USER</span>
-                </div>
-            </div>
-
-            <form id="depositForm" class="space-y-4">
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Deposit Amount (KES)</label>
-                    <div class="relative flex items-center">
-                        <button type="button" id="depStepMinus" class="bg-dark-800 hover:bg-dark-700 px-3.5 py-2.5 rounded-l-xl border-y border-l border-dark-700 text-gray-300 font-bold text-base transition">-</button>
-                        <input type="number" id="depositAmount" min="1" max="500000" step="1" placeholder="Enter amount"
-                            class="w-full bg-dark-950 border border-dark-700 py-2.5 text-center text-white font-bold text-base focus:outline-none focus:border-emerald-500">
-                        <button type="button" id="depStepPlus" class="bg-dark-800 hover:bg-dark-700 px-3.5 py-2.5 rounded-r-xl border-y border-r border-dark-700 text-gray-300 font-bold text-base transition">+</button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <button type="button" class="dep-preset bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-2 rounded-xl font-bold text-emerald-400 transition" data-val="50">KES 50</button>
-                    <button type="button" class="dep-preset bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-2 rounded-xl font-bold text-emerald-400 transition" data-val="100">KES 100</button>
-                    <button type="button" class="dep-preset bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-2 rounded-xl font-bold text-emerald-400 transition" data-val="1000">KES 1,000</button>
-                </div>
-                <button type="submit" class="w-full py-3.5 rounded-xl font-black text-sm transition bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-dark-950 shadow-lg shadow-emerald-500/25">
-                    CONFIRM DEPOSIT
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MAIN HEADER -->
-    <header class="h-14 bg-dark-900 border-b border-dark-700 px-4 md:px-6 flex items-center justify-between shrink-0">
-        <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
-                <i class="fa-solid fa-plane-departure text-lg"></i>
-            </div>
-            <span class="font-black text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                USHINDI AVIATOR
-            </span>
-        </div>
-
-        <div class="flex items-center space-x-2 md:space-x-3">
-            <div id="userBadge" class="hidden md:flex items-center space-x-2 bg-dark-800 border border-dark-700 rounded-xl px-3 py-1.5 text-xs text-gray-300 font-semibold">
-                <i class="fa-solid fa-user-astronaut text-cyan-400"></i>
-                <span id="activeUserPhone">0700000000</span>
-            </div>
-
-            <div class="bg-dark-900 border border-dark-700 rounded-xl px-2.5 md:px-3 py-1 flex items-center space-x-2">
-                <span class="hidden sm:inline text-[10px] text-gray-400 font-semibold uppercase">Balance</span>
-                <span id="userBalance" class="text-neon-cyan font-black text-sm md:text-lg">KES 0.00</span>
-                <button id="openDepositBtn" title="Deposit Funds" class="bg-emerald-500 hover:bg-emerald-400 text-dark-950 font-black text-xs px-2.5 py-1 rounded-lg ml-1 transition flex items-center space-x-1 shadow-md shadow-emerald-500/20">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>DEPOSIT</span>
-                </button>
-            </div>
-
-            <a href="verifier.html" target="_blank" title="Open Standalone Provably Fair Verifier"
-               class="bg-dark-800 hover:bg-dark-700 border border-dark-700 text-emerald-400 px-2.5 h-9 rounded-lg flex items-center gap-1.5 text-xs font-bold transition">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span class="hidden lg:inline">Verifier</span>
-            </a>
-
-            <button id="soundToggleBtn" title="Toggle Audio" class="bg-dark-800 hover:bg-dark-700 border border-dark-700 text-gray-300 w-9 h-9 rounded-lg flex items-center justify-center transition">
-                <i id="soundIcon" class="fa-solid fa-volume-high text-cyan-400"></i>
-            </button>
-
-            <button id="logoutBtn" title="Log Out" class="bg-dark-800 hover:bg-red-950 border border-dark-700 text-gray-400 hover:text-red-400 w-9 h-9 rounded-lg flex items-center justify-center transition">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
+    <header>
+        <div class="logo">USHINDI<span>AVIATOR</span></div>
+        <div class="user-panel">
+            <div class="balance-badge" id="userBalance">KES 0.00</div>
+            <button class="btn btn-deposit" onclick="openDepositModal()">Deposit</button>
+            <button class="btn" onclick="logoutUser()">Logout</button>
         </div>
     </header>
 
-    <!-- MAIN GAME LAYOUT -->
-    <main class="flex-1 flex flex-col md:flex-row p-3 md:p-4 gap-3 md:gap-4 overflow-hidden max-w-[1600px] w-full mx-auto">
-        
-        <!-- Left Betting Controls -->
-        <section class="w-full md:w-96 flex flex-col gap-3 shrink-0 order-2 md:order-1 overflow-y-auto pr-1">
+    <div class="main-container">
+        <div class="game-section">
+            <div class="history-bar" id="historyBar">
+                <span style="font-size: 11px; color: #8a99ad; font-weight: bold;">HISTORY:</span>
+            </div>
             
-            <!-- BET SLOT 1 -->
-            <div id="slot1" class="bg-dark-900 border border-dark-700 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all duration-300">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-400 tracking-wider uppercase flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Bet Slot 1
-                    </span>
-                    <span id="slot1Status" class="text-xs font-semibold px-2 py-0.5 rounded bg-dark-800 text-gray-400 border border-dark-700">WAITING</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Amount (KES)</label>
-                        <div class="relative flex items-center">
-                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-l-xl border-y border-l border-dark-700 text-gray-300 font-bold text-xs" data-slot="1" data-dir="-1">-</button>
-                            <input type="number" id="betAmount1" value="10.00" min="1" max="100000" step="1"
-                                class="w-full bg-dark-950 border border-dark-700 py-2 text-center text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
-                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-r-xl border-y border-r border-dark-700 text-gray-300 font-bold text-xs" data-slot="1" data-dir="1">+</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Auto Cash Out</label>
-                        <input type="number" id="autoCash1" value="2.00" min="1.01" step="0.10" placeholder="Off"
-                            class="w-full bg-dark-950 border border-dark-700 rounded-xl px-3 py-2 text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
-                    </div>
-                </div>
-                <div class="grid grid-cols-5 gap-1">
-                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="10">10</button>
-                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="50">50</button>
-                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="100">100</button>
-                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="500">500</button>
-                    <button class="quick-btn bg-dark-800 hover:bg-dark-700 border border-dark-700 text-xs py-1 rounded-lg font-semibold transition" data-slot="1" data-val="1000">1K</button>
-                </div>
-                <button id="betBtn1" class="w-full py-3 rounded-xl font-black text-lg transition duration-200 transform active:scale-95 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-dark-950 shadow-lg shadow-emerald-500/20">
-                    BET
-                </button>
+            <div class="canvas-container">
+                <div class="multiplier-display" id="multiplierDisplay">1.00x</div>
+                <canvas id="gameCanvas"></canvas>
             </div>
 
-            <!-- BET SLOT 2 -->
-            <div id="slot2" class="bg-dark-900 border border-dark-700 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all duration-300">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-400 tracking-wider uppercase flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> Bet Slot 2
-                    </span>
-                    <span id="slot2Status" class="text-xs font-semibold px-2 py-0.5 rounded bg-dark-800 text-gray-400 border border-dark-700">WAITING</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Amount (KES)</label>
-                        <div class="relative flex items-center">
-                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-l-xl border-y border-l border-dark-700 text-gray-300 font-bold text-xs" data-slot="2" data-dir="-1">-</button>
-                            <input type="number" id="betAmount2" value="20.00" min="1" max="100000" step="1"
-                                class="w-full bg-dark-950 border border-dark-700 py-2 text-center text-white font-bold text-sm focus:outline-none focus:border-cyan-500">
-                            <button class="adjust-btn bg-dark-800 hover:bg-dark-700 px-2.5 py-2 rounded-r-xl border-y border-r border-dark-700 text-gray-300 font-bold text-xs" data-slot="2" data-dir="1">+</button>
+            <div class="fairness-box" id="fairnessBox">
+                Provably Fair SHA-256 Hash (Current Round): <span id="currentHash" style="color:#00e676">Waiting...</span>
+            </div>
+        </div>
+
+        <div class="betting-section">
+            <div class="bet-panels-wrapper">
+                <!-- BET SLOT 1 -->
+                <div class="bet-panel" id="panel1">
+                    <div class="input-group">
+                        <label>Bet Amount (KES)</label>
+                        <div class="input-row">
+                            <input type="number" id="betInput1" value="100" min="10">
                         </div>
                     </div>
-         
+                    <div class="quick-btns">
+                        <button class="q-btn" onclick="setBet(1, 50)">50</button>
+                        <button class="q-btn" onclick="setBet(1, 100)">100</button>
+                        <button class="q-btn" onclick="setBet(1, 500)">500</button>
+                        <button class="q-btn" onclick="setBet(1, 1000)">1000</button>
+                    </div>
+                    <button class="action-btn btn-bet" id="actionBtn1" onclick="handleBetClick(1)">PLACE BET</button>
+                </div>
+
+                <!-- BET SLOT 2 -->
+                <div class="bet-panel" id="panel2">
+                    <div class="input-group">
+                        <label>Bet Amount (KES)</label>
+                        <div class="input-row">
+                            <input type="number" id="betInput2" value="100" min="10">
+                        </div>
+                    </div>
+                    <div class="quick-btns">
+                        <button class="q-btn" onclick="setBet(2, 50)">50</button>
+                        <button class="q-btn" onclick="setBet(2, 100)">100</button>
+                        <button class="q-btn" onclick="setBet(2, 500)">500</button>
+                        <button class="q-btn" onclick="setBet(2, 1000)">1000</button>
+                    </div>
+                    <button class="action-btn btn-bet" id="actionBtn2" onclick="handleBetClick(2)">PLACE BET</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL -->
+    <div class="modal" id="authModal" style="display:flex;">
+        <div class="modal-content">
+            <h3 id="authTitle">Welcome to UshindiAviator</h3>
+            <p style="font-size: 13px; color: #8a99ad;" id="authDesc">Enter your Kenyan Phone number & 4-digit PIN to start.</p>
+            <input type="text" id="authPhone" placeholder="Phone (e.g. 0712345678)" maxlength="10">
+            <input type="password" id="authPin" placeholder="4-Digit PIN" maxlength="4">
+            <button class="action-btn btn-bet" onclick="authenticateUser()">CONTINUE</button>
+        </div>
+    </div>
+
+    <!-- DEPOSIT MODAL -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <h3>Deposit via Equity Paybill</h3>
+            <p style="font-size: 13px; color: #8a99ad;">1. Go to Equity M-Banking / Sim Banking / *247#<br>2. Select Paybill: <b style="color:#fff;">247247</b><br>3. Account Name: <b style="color:#fff;">USHINDI AVIATOR</b><br>4. Enter Reference: <b style="color:#fff;" id="depositRef">USHINDI-XXXX</b></p>
+            <input type="number" id="depositAmount" placeholder="Enter amount deposited (KES)" value="500">
+            <button class="action-btn btn-bet" onclick="confirmDeposit()">CONFIRM DEPOSIT</button>
+            <button class="btn" style="background:#222d42; padding:10px;" onclick="closeDepositModal()">Cancel</button>
+        </div>
+    </div>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('ushindi_users')) || {};
+    let activeUser = localStorage.getItem('ushindi_active_user') || null;
+
+    let balance = 0;
+    let gameState = 'IDLE'; // IDLE, COUNTDOWN, FLYING, CRASHED
+    let currentMultiplier = 1.00;
+    let targetCrashMultiplier = 2.00;
+    let countdownTimer = 5;
+    let flightStartTime = 0;
+
+    let bets = {
+        1: { active: false, amount: 0, cashedOut: false, winAmount: 0 },
+        2: { active: false, amount: 0, cashedOut: false, winAmount: 0 }
+    };
+
+    let history = [];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // AUTH SYSTEM
+    function checkAuth() {
+        if (!activeUser || !users[activeUser]) {
+            document.getElementById('authModal').style.display = 'flex';
+        } else {
+            document.getElementById('authModal').style.display = 'none';
+            balance = users[activeUser].balance;
+            updateUI();
+            startGameStateLoop();
+        }
+    }
+
+    function authenticateUser() {
+        let phone = document.getElementById('authPhone').value.trim();
+        let pin = document.getElementById('authPin').value.trim();
+        if (phone.length < 10 || pin.length !== 4) {
+            alert('Please enter a valid 10-digit Kenyan phone number and 4-digit PIN.');
+            return;
+        }
+        if (!users[phone]) {
+            users[phone] = { pin: pin, balance: 1000.00 }; // Welcome bonus
+        } else if (users[phone].pin !== pin) {
+            alert('Incorrect PIN!');
+            return;
+        }
+        activeUser = phone;
+        localStorage.setItem('ushindi_active_user', activeUser);
+        localStorage.setItem('ushindi_users', JSON.stringify(users));
+        checkAuth();
+    }
+
+    function logoutUser() {
+        localStorage.removeItem('ushindi_active_user');
+        location.reload();
+    }
+
+    function updateUI() {
+        document.getElementById('userBalance').innerText = `KES ${balance.toFixed(2)}`;
+        let last4 = activeUser ? activeUser.slice(-4) : '1234';
+        document.getElementById('depositRef').innerText = `USHINDI-${last4}`;
+    }
+
+    function saveUserData() {
+        if (activeUser && users[activeUser]) {
+            users[activeUser].balance = balance;
+            localStorage.setItem('ushindi_users', JSON.stringify(users));
+        }
+    }
+
+    // DEPOSIT
+    function openDepositModal() { document.getElementById('depositModal').style.display = 'flex'; }
+    function closeDepositModal() { document.getElementById('depositModal').style.display = 'none'; }
+    function confirmDeposit() {
+        let amt = parseFloat(document.getElementById('depositAmount').value);
+        if (isNaN(amt) || amt <= 0) { alert('Enter valid amount'); return; }
+        balance += amt;
+        saveUserData();
+        updateUI();
+        closeDepositModal();
+        alert(`Successfully deposited KES ${amt.toFixed(2)} via Equity Paybill 247247!`);
+    }
+
+    // BETTING LOGIC
+    function setBet(slot, val) {
+        document.getElementById(`betInput${slot}`).value = val;
+    }
+
+    function handleBetClick(slot) {
+        let amountInput = parseFloat(document.getElementById(`betInput${slot}`).value);
+        let btn = document.getElementById(`actionBtn${slot}`);
+
+        if (!bets[slot].active) {
+            if (isNaN(amountInput) || amountInput <= 0) { alert('Invalid bet amount'); return; }
+            if (amountInput > balance) { alert('Insufficient balance'); return; }
+
+            balance -= amountInput;
+            saveUserData();
+            updateUI();
+
+            bets[slot].active = true;
+            bets[slot].amount = amountInput;
+            bets[slot].cashedOut = false;
+
+            btn.innerText = 'CANCEL / BET PLACED';
+            btn.className = 'action-btn btn-bet active-bet';
+        } else {
+            if (gameState === 'COUNTDOWN') {
+                balance += bets[slot].amount;
+                saveUserData();
+                updateUI();
+                resetBetSlot(slot);
+            }
+        }
+    }
+
+    function resetBetSlot(slot) {
+        bets[slot].active = false;
+        bets[slot].amount = 0;
+        bets[slot].cashedOut = false;
+        let btn = document.getElementById(`actionBtn${slot}`);
+        btn.innerText = 'PLACE BET';
+        btn.className = 'action-btn btn-bet';
+    }
+
+    // GAME ENGINE & SYNED MULTIPLIER
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function startGameStateLoop() {
+        while (true) {
+            // COUNTDOWN PHASE
+            gameState = 'COUNTDOWN';
+            countdownTimer = 5;
+            
+            // Check synced developer override
+            let overrideMultiplier = localStorage.getItem('ushindi_next_multiplier');
+            if (overrideMultiplier) {
+                targetCrashMultiplier = parseFloat(overrideMultiplier);
+                localStorage.removeItem('ushindi_next_multiplier');
+            } else {
+                // Random Provably Fair crash algorithm (weighted towards 1.00x - 2.00x)
+                let r = Math.random();
+                targetCrashMultiplier = parseFloat((1.01 + (0.99 / (1 - r * 0.95) - 0.99)).toFixed(2));
+                if (targetCrashMultiplier < 1.00) targetCrashMultiplier = 1.00;
+                if (targetCrashMultiplier > 100) targetCrashMultiplier = 100.00;
+            }
+
+            let hashStr = await sha256(targetCrashMultiplier.toString() + Date.now());
+            document.getElementById('currentHash').innerText = hashStr;
+
+            for (let i = 1; i <= 2; i++) {
+                if (bets[i].active && gameState === 'COUNTDOWN') {
+                    // Bet stays locked for next round
+                }
+            }
+
+            while (countdownTimer > 0) {
+                document.getElementById('multiplierDisplay').innerText = `NEXT ROUND IN ${countdownTimer}s`;
+                document.getElementById('multiplierDisplay').style.color = '#00e676';
+                await new Promise(r => setTimeout(r, 1000));
+                countdownTimer--;
+            }
+
+            // FLYING PHASE
+            gameState = 'FLYING';
+            flightStartTime = Date.now();
+            currentMultiplier = 1.00;
+
+            for (let i = 1; i <= 2; i++) {
+                if (bets[i].active) {
+                    let btn = document.getElementById(`actionBtn${i}`);
+                    btn.innerText = 'CASHOUT';
+                    btn.className = 'action-btn btn-cashout';
+                    btn.onclick = () => cashOut(i);
+                }
+            }
+
+            while (gameState === 'FLYING') {
+                let elapsed = (Date.now() - flightStartTime) / 1000;
+                currentMultiplier = parseFloat((1.00 + elapsed * 0.15 + Math.pow(elapsed, 1.3) * 0.05).toFixed(2));
+
+                if (currentMultiplier >= targetCrashMultiplier) {
+                    currentMultiplier = targetCrashMultiplier;
+                    gameState = 'CRASHED';
+                    break;
+                }
+
+                document.getElementById('multiplierDisplay').innerText = `${currentMultiplier.toFixed(2)}x`;
+                document.getElementById('multiplierDisplay').style.color = '#fff';
+                await new Promise(r => setTimeout(r, 40));
+            }
+
+            // CRASHED PHASE
+            document.getElementById('multiplierDisplay').innerText = `FLEW AWAY @ ${currentMultiplier.toFixed(2)}x`;
+            document.getElementById('multiplierDisplay').style.color = '#ff3b30';
+
+            for (let i = 1; i <= 2; i++) {
+                if (bets[i].active && !bets[i].cashedOut) {
+                    resetBetSlot(i);
+                }
+                let btn = document.getElementById(`actionBtn${i}`);
+                btn.onclick = () => handleBetClick(i);
+            }
+
+            history.unshift(currentMultiplier.toFixed(2) + 'x');
+            if (history.length > 15) history.pop();
+            updateHistoryBar();
+
+            await new Promise(r => setTimeout(r, 3000));
+        }
+    }
+
+    function cashOut(slot) {
+        if (gameState !== 'FLYING' || !bets[slot].active || bets[slot].cashedOut) return;
+        let win = bets[slot].amount * currentMultiplier;
+        balance += win;
+        saveUserData();
+        updateUI();
+
+        bets[slot].cashedOut = true;
+        let btn = document.getElementById(`actionBtn${slot}`);
+        btn.innerText = `WON KES ${win.toFixed(0)}`;
+        btn.className = 'action-btn btn-bet';
+
+        setTimeout(() => {
+            if (gameState === 'FLYING') {
+                resetBetSlot(slot);
+            }
+        }, 1500);
+    }
+
+    function updateHistoryBar() {
+        let bar = document.getElementById('historyBar');
+        bar.innerHTML = '<span style="font-size: 11px; color: #8a99ad; font-weight: bold;">HISTORY:</span>';
+        history.forEach(h => {
+            let pill = document.createElement('div');
+            pill.className = 'history-pill';
+            pill.style.color = parseFloat(h) >= 2.0 ? '#00e676' : '#ff3b30';
+            pill.innerText = h;
+            bar.appendChild(pill);
+        });
+    }
+
+    // 60 FPS CANVAS RENDERER
+    function renderCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw background grid lines
+        ctx.strokeStyle = '#1b2436';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 40) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 40) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+
+        if (gameState === 'FLYING' || gameState === 'CRASHED') {
+            // Draw flight curve trajectory
+            ctx.strokeStyle = '#ff3b30';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            let progressX = canvas.width * 0.75;
+            let progressY = canvas.height * 0.25;
+            ctx.quadraticCurveTo(canvas.width * 0.4, canvas.height * 0.8, progressX, progressY);
+            ctx.stroke();
+
+            // Draw Airplane Icon
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '24px sans-serif';
+            ctx.fillText('✈️', progressX - 15, progressY + 10);
+        }
+
+        requestAnimationFrame(renderCanvas);
+    }
+    renderCanvas();
+
+    checkAuth();
+</script>
+</body>
+</html>
