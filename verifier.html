@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ushindiaviator - Provably Fair Verifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#07090e',
+                            900: '#0d1117',
+                            850: '#121722',
+                            800: '#161b22',
+                            700: '#21262d'
+                        },
+                        neon: {
+                            cyan: '#00f2fe'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #07090e;
+            color: #ffffff;
+            user-select: none;
+        }
+        .font-mono-num { font-family: 'JetBrains Mono', monospace; }
+        .glow-cyan { text-shadow: 0 0 18px rgba(0, 242, 254, 0.7); }
+        .box-glow { box-shadow: 0 0 40px rgba(0, 242, 254, 0.07); }
+    </style>
+</head>
+<body class="min-h-screen w-screen bg-dark-950 flex flex-col justify-center items-center p-4">
+
+    <main class="w-full max-w-lg bg-dark-900 border border-dark-700 rounded-2xl p-6 sm:p-8 flex flex-col gap-5 box-glow shadow-2xl relative">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-white tracking-wide">
+                    Provably Fair Algorithm
+                </h1>
+            </div>
+            <a href="index.html" class="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left"></i> Back to Game
+            </a>
+        </div>
+
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+            ushindiaviator utilizes cryptographic hashing to generate multipliers before takeoff. You can verify SHA-256 seeds or edit the synced next-round multiplier below.
+        </p>
+
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between items-center">
+                    <label for="serverSeedHash" class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        SERVER SEED HASH (SHA-256)
+                    </label>
+                    <button id="randomHashBtn" class="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition">
+                        <i class="fa-solid fa-shuffle"></i> Randomize
+                    </button>
+                </div>
+                <input type="text" id="serverSeedHash"
+                    value="3d5718cda20765525e1f1c1b9bd2c5ce0411fe869e226f2483f91"
+                    class="w-full bg-dark-950 border border-dark-700 rounded-xl px-4 py-3 text-xs sm:text-sm font-mono-num text-cyan-400 font-bold focus:outline-none focus:border-cyan-500 transition">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label for="clientSeed" class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    CLIENT SEED
+                </label>
+                <input type="text" id="clientSeed"
+                    value="ushindi_client_seed_2026_prod"
+                    class="w-full bg-dark-950 border border-dark-700 rounded-xl px-4 py-3 text-xs sm:text-sm font-mono-num text-gray-200 font-bold focus:outline-none focus:border-cyan-500 transition">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label for="nonce" class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    NONCE / ROUND NUMBER
+                </label>
+                <div class="flex items-center">
+                    <button id="decNonce" class="bg-dark-850 hover:bg-dark-800 border border-dark-700 px-3 py-2.5 rounded-l-xl text-gray-300 font-bold text-sm">-</button>
+                    <input type="number" id="nonce" value="1" min="1" step="1"
+                        class="w-full bg-dark-950 border-y border-dark-700 py-2.5 text-center text-white font-bold text-sm font-mono-num focus:outline-none focus:border-cyan-500">
+                    <button id="incNonce" class="bg-dark-850 hover:bg-dark-800 border border-dark-700 px-3 py-2.5 rounded-r-xl text-gray-300 font-bold text-sm">+</button>
+                </div>
+            </div>
+
+            <!-- Live Synced Next Round Multiplier Editor -->
+            <div class="flex flex-col gap-1.5 pt-1 border-t border-dark-800">
+                <label for="editableOutcome" class="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider flex justify-between">
+                    <span>EDIT NEXT ROUND OUTCOME (LIVE GAME SYNC)</span>
+                    <span>ACTIVE</span>
+                </label>
+                <input type="number" id="editableOutcome" value="1.56" min="1.01" step="0.01"
+                    class="w-full bg-dark-950 border border-emerald-500/40 rounded-xl px-4 py-2.5 text-sm font-mono-num text-emerald-400 font-bold focus:outline-none focus:border-emerald-400 transition">
+            </div>
+        </div>
+
+        <div class="bg-dark-950 border border-dark-700/80 rounded-xl p-4 flex justify-between items-center shadow-inner mt-1">
+            <span class="text-xs sm:text-sm text-gray-400 font-medium">Calculated Round Outcome:</span>
+            <span id="calculatedOutcome" class="text-2xl sm:text-3xl font-black font-mono-num text-neon-cyan glow-cyan">
+                1.56x
+            </span>
+        </div>
+
+        <button id="copyBtn" class="w-full py-3 bg-dark-850 hover:bg-dark-800 border border-dark-700 rounded-xl text-xs sm:text-sm font-bold text-gray-300 transition flex items-center justify-center gap-2">
+            <i class="fa-regular fa-copy"></i>
+            <span id="copyText">Copy Verification Data</span>
+        </button>
+
+        <div id="toast" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-dark-950 font-black text-xs px-4 py-2 rounded-full shadow-lg">
+            Copied to Clipboard!
+        </div>
+    </main>
+
+    <script>
+        const serverSeedHashEl = document.getElementById('serverSeedHash');
+        const clientSeedEl = document.getElementById('clientSeed');
+        const nonceEl = document.getElementById('nonce');
+        const editableOutcomeEl = document.getElementById('editableOutcome');
+        const calculatedOutcomeEl = document.getElementById('calculatedOutcome');
+        const randomHashBtn = document.getElementById('randomHashBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyText = document.getElementById('copyText');
+        const toast = document.getElementById('toast');
+
+        const savedNext = localStorage.getItem('ushindi_next_multiplier');
+        if (savedNext) {
+            editableOutcomeEl.value = savedNext;
+            calculatedOutcomeEl.innerText = `${parseFloat(savedNext).toFixed(2)}x`;
+        }
+
+        editableOutcomeEl.addEventListener('input', () => {
+            const val = parseFloat(editableOutcomeEl.value);
+            if (!isNaN(val) && val >= 1.0) {
+                localStorage.setItem('ushindi_next_multiplier', val.toFixed(2));
+                calculatedOutcomeEl.innerText = `${val.toFixed(2)}x`;
+            }
+        });
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'ushindi_next_multiplier' && e.newValue) {
+                editableOutcomeEl.value = e.newValue;
+                calculatedOutcomeEl.innerText = `${parseFloat(e.newValue).toFixed(2)}x`;
+            }
+        });
+
+        async function calculateMultiplier() {
+            const seed = serverSeedHashEl.value.trim();
+            const clientSeed = clientSeedEl.value.trim();
+            const nonce = nonceEl.value.trim();
+            if (!seed || !clientSeed) return;
+
+            try {
+                const msgBuffer = new TextEncoder().encode(`${seed}:${clientSeed}:${nonce}`);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                let hexVal = 0;
+                for (let i = 0; i < 5; i++) hexVal = (hexVal * 256) + hashArray[i];
+
+                let crashPoint = 1.00;
+                if (hexVal % 33 !== 0) {
+                    const raw = (100 * Math.pow(2, 52) - hexVal) / (Math.pow(2, 52) - hexVal);
+                    crashPoint = Math.max(1.00, Math.floor(raw) / 100);
+                }
+                const formatted = crashPoint.toFixed(2);
+                calculatedOutcomeEl.innerText = `${formatted}x`;
+                editableOutcomeEl.value = formatted;
+                localStorage.setItem('ushindi_next_multiplier', formatted);
+            } catch (e) {}
+        }
+
+        serverSeedHashEl.addEventListener('input', calculateMultiplier);
+        clientSeedEl.addEventListener('input', calculateMultiplier);
+        nonceEl.addEventListener('input', calculateMultiplier);
+        document.getElementById('decNonce').addEventListener('click', () => {
+            nonceEl.value = Math.max(1, (parseInt(nonceEl.value) || 1) - 1);
+            calculateMultiplier();
+        });
+        document.getElementById('incNonce').addEventListener('click', () => {
+            nonceEl.value = (parseInt(nonceEl.value) || 1) + 1;
+            calculateMultiplier();
+        });
+        randomHashBtn.addEventListener('click', () => {
+            const array = new Uint8Array(32);
+            crypto.getRandomValues(array);
+            serverSeedHashEl.value = Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+            calculateMultiplier();
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const data = `ushindiAviator Verification:\nServer Seed Hash: ${serverSeedHashEl.value}\nClient Seed: ${clientSeedEl.value}\nNonce: ${nonceEl.value}\nOutcome: ${calculatedOutcomeEl.innerText}`;
+            navigator.clipboard.writeText(data);
+            copyText.innerText = 'Copied!';
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                copyText.innerText = 'Copy Verification Data';
+                toast.classList.add('hidden');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
