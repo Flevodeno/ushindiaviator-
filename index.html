@@ -25,7 +25,6 @@
         .bet-panels-wrapper { display: flex; flex-direction: column; gap: 15px; }
         @media(min-width: 600px) { .bet-panels-wrapper { flex-direction: row; } }
         .bet-panel { background: #151922; border: 1px solid #222d42; border-radius: 12px; padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
-        .bet-controls { display: flex; justify-content: space-between; align-items: center; }
         .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .input-group label { font-size: 11px; color: #8a99ad; text-transform: uppercase; font-weight: bold; }
         .input-row { display: flex; background: #0b0e14; border: 1px solid #2b374d; border-radius: 8px; overflow: hidden; }
@@ -275,11 +274,10 @@
             gameState = 'COUNTDOWN';
             countdownTimer = 5;
             
-            // Instantly check and apply verifier control override
             let overrideMultiplier = localStorage.getItem('ushindi_next_multiplier');
             if (overrideMultiplier !== null && overrideMultiplier !== undefined && overrideMultiplier !== '') {
                 targetCrashMultiplier = parseFloat(overrideMultiplier);
-                localStorage.removeItem('ushindi_next_multiplier'); // Clear after capturing so it only forces once per set
+                localStorage.removeItem('ushindi_next_multiplier');
             } else {
                 let r = Math.random();
                 targetCrashMultiplier = parseFloat((1.01 + (0.99 / (1 - r * 0.95) - 0.99)).toFixed(2));
@@ -289,13 +287,17 @@
 
             let hashStr = await sha256(targetCrashMultiplier.toString() + Date.now());
             document.getElementById('currentHash').innerText = hashStr;
+            
+            // Sync target crash multiplier and current hash to localStorage for the verifier panel display
+            localStorage.setItem('ushindi_current_hash', hashStr);
+            localStorage.setItem('ushindi_active_target', targetCrashMultiplier.toFixed(2));
 
             while (countdownTimer > 0) {
-                // Continuously poll during countdown in case user submits a late override from verifier panel
                 let lateOverride = localStorage.getItem('ushindi_next_multiplier');
                 if (lateOverride !== null && lateOverride !== undefined && lateOverride !== '') {
                     targetCrashMultiplier = parseFloat(lateOverride);
                     localStorage.removeItem('ushindi_next_multiplier');
+                    localStorage.setItem('ushindi_active_target', targetCrashMultiplier.toFixed(2));
                 }
 
                 document.getElementById('multiplierDisplay').innerText = `NEXT ROUND IN ${countdownTimer}s`;
